@@ -1,4 +1,5 @@
 Cara install
+
 cd ~/img/openwrt-imagebuilder-25.12.5-armsr-armv8.Linux-x86_64/bin/targets/armsr/armv8
 IMG=~/.local/var/pmbootstrap/chroot_native/home/pmos/rootfs/qcom-msm89x7.img
 LOOP=$(sudo losetup -fP --show $IMG)
