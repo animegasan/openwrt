@@ -1,0 +1,44 @@
+# 1. USB gadget: bongkar gadget pmOS lama dulu, pakai RNDIS (Windows)
+#!/bin/sh /etc/rc.common
+START=15
+MODE=rndis   # ganti ke ecm kalau PC Linux/macOS
+
+start() {
+    mountpoint -q /sys/kernel/config || mount -t configfs none /sys/kernel/config
+    G=/sys/kernel/config/usb_gadget/g1
+    if [ -d $G ]; then
+        echo "" > $G/UDC 2>/dev/null
+        rm -f $G/configs/*/* $G/os_desc/c.1 2>/dev/null
+        rmdir $G/configs/*/strings/* $G/configs/* $G/functions/* $G/strings/* 2>/dev/null
+        rmdir $G 2>/dev/null
+    fi
+    mkdir -p $G && cd $G || return 1
+    echo 0x1d6b > idVendor
+    echo 0x0104 > idProduct
+    mkdir -p strings/0x409
+    echo "OpenWrt"  > strings/0x409/manufacturer
+    echo "Redmi 5A" > strings/0x409/product
+    echo "riva0001" > strings/0x409/serialnumber
+    mkdir -p configs/c.1/strings/0x409
+    echo "net" > configs/c.1/strings/0x409/configuration
+
+    mkdir -p functions/$MODE.usb0
+    echo "02:11:22:33:44:55" > functions/$MODE.usb0/host_addr
+    echo "02:11:22:33:44:66" > functions/$MODE.usb0/dev_addr
+    if [ "$MODE" = "rndis" ]; then
+        mkdir -p os_desc
+        echo 1 > os_desc/use
+        echo 0xcd > os_desc/b_vendor_code
+        echo MSFT100 > os_desc/qw_sign
+        echo RNDIS   > functions/rndis.usb0/os_desc/interface.rndis/compatible_id
+        echo 5162001 > functions/rndis.usb0/os_desc/interface.rndis/sub_compatible_id
+        ln -s $G/configs/c.1 os_desc/
+    fi
+    ln -s $G/functions/$MODE.usb0 configs/c.1/
+
+    i=0
+    while [ -z "$(ls /sys/class/udc 2>/dev/null)" ] && [ $i -lt 30 ]; do sleep 1; i=$((i+1)); done
+    ls /sys/class/udc | head -n1 > UDC
+}
+
+stop() { echo "" > /sys/kernel/config/usb_gadget/g1/UDC 2>/dev/null; }
