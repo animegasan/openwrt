@@ -1,3 +1,4 @@
+# 2. Subnet baru (tidak bentrok dengan router rumah) + DHCP
 #!/bin/sh
 passwd root <<PW
 openwrt
