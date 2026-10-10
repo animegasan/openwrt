@@ -1,0 +1,21 @@
+#!/bin/sh
+passwd root <<PW
+openwrt
+openwrt
+PW
+uci set system.@system[0].hostname='OpenWrt-Riva'
+uci set network.lan.ipaddr='192.168.50.1'
+uci set network.lan.netmask='255.255.255.0'
+uci -q delete network.@device[0].ports
+uci add_list network.@device[0].ports='usb0'
+uci set network.@device[0].bridge_empty='1'
+uci -q delete network.wan
+uci -q delete network.wan6
+uci set dhcp.lan=dhcp
+uci set dhcp.lan.interface='lan'
+uci set dhcp.lan.start='100'
+uci set dhcp.lan.limit='50'
+uci set dhcp.lan.leasetime='12h'
+uci set dhcp.lan.ignore='0'
+uci commit
+exit 0
